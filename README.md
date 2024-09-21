@@ -6,6 +6,10 @@ The East Africa Poverty Team fhas requested support for using alternative data t
 
 The assignment covers analytics of crop productivity, conflict mapping, flood mapping, analyzing internet connectivity trends, monitoring nighttime lights, and analyzing urban expansion trends. 
 
+## Contents
+
+```{tableofcontents}
+```
 
 ## Data
 
@@ -30,34 +34,10 @@ The following datasets are used in this assignment:
 Additional details about each dataset—such as licensing, update frequency, and access instructions—are provided within the respective data products listed below. 
 
 
-## Reusable Data Science Products
+#### Data Availability Statement
 
-The following data products are included in this project:
+Restrictions may apply to the data that support the findings of this study. Data received from the private sector through the Development Data Partnership are subject to the terms and conditions of the data license agreement and the “Official Use Only” data classification. These data are available upon request through the [Development Data Partnership](https://datapartnership.org/). Licensing and access information for all other datasets are included in the documentation.
 
-* Conflict Monitoring
-
-* Nighttime Lights Monitoring
-
-* Crop Monitoring 
-
-* Flood Monitoring
-
-* Internet Connectivity Trends
-
-* Urban Expansion Trends
-
-  
-
-
-## Insights and Indicators
-
-These data products can be combined to create new indicators, such as:
-
-* (forthcoming)
-
-* (forthcoming)
-
-  
 
 
 ## License
@@ -67,4 +47,4 @@ This projects is licensed under the [**Mozilla Public License**](https://opensou
 
 ## Code of Conduct
 
-The <span style="color:#3EACAD">template</span> maintains a [Code of Conduct](docs/CODE_OF_CONDUCT.md) to ensure an inclusive and respectful environment for everyone. Please adhere to it in all interactions within our community.
+The World Bank Data Lab <span style="color:#3EACAD">template</span> used to create this project maintains a [Code of Conduct](docs/CODE_OF_CONDUCT.md) to ensure an inclusive and respectful environment for everyone. Please adhere to it in all interactions within our community.
