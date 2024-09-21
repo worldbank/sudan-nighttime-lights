@@ -5,9 +5,6 @@ parts:
   - caption: Introduction to Data Goods
     chapters:
       - file: docs/1-intro-to-data-goods
-  - caption: Data
-    chapters:
-      - file: docs/2-data
   - caption: Reusable Data Products
     chapters:
       - file: docs/3-reusable-data-products
