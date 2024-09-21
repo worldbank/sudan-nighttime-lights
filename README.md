@@ -31,7 +31,7 @@ The following datasets are used in this assignment:
 
 * [NASA LANCE](https://www.earthdata.nasa.gov/learn/find-data/near-real-time/hazards-and-disasters/floods) - NASA LANCE near real-time data can be used for identifying, tracking, and mapping floodwater extent for active floods.
 
-Additional details about each dataset—such as licensing, update frequency, and access instructions—are provided within the respective data products listed below. 
+Additional details about each dataset—such as licensing, update frequency, and access instructions—are provided within the respective data products.
 
 
 #### Data Availability Statement
