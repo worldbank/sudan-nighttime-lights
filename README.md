@@ -9,7 +9,7 @@ The assignment covers analytics of crop productivity, conflict mapping, flood ma
 
 ## Data
 
-The following datasets are used in this assignmet. Further details about each dataset -- licensing, frequency of updates, access instructions, etc. -- may be found on the [Data](https://worldbank.github.io/sudan-poverty-monitoring/docs/2-data.html) section of the project web book.
+The following datasets are used in this assignment:
 
 * [ACLED](https://worldbank.github.io/iraq-economic-monitoring/docs/2-data.html#(https://datacatalog.worldbank.org/int/search/dataset/0061835/acled---middle-east)) - Time-stamped, geolocated points where conflicts (protests, attacks, etc.) have occured, collected globally based on news and crowdsourced data.
 
@@ -27,7 +27,7 @@ The following datasets are used in this assignmet. Further details about each da
 
 * [NASA LANCE](https://www.earthdata.nasa.gov/learn/find-data/near-real-time/hazards-and-disasters/floods) - NASA LANCE near real-time data can be used for identifying, tracking, and mapping floodwater extent for active floods.
 
-  
+Additional details about each dataset—such as licensing, update frequency, and access instructions—are provided within the respective data products listed below. 
 
 
 ## Reusable Data Science Products
