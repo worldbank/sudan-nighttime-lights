@@ -1,4 +1,4 @@
-# Analytics
+# Analytics: Introduction
 
 All Data Lab analytics include information on data sources, as well as original code and documentation. All analytics are presented in a web book format, per the following outline:
 
