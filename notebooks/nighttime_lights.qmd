@@ -54,6 +54,7 @@ library(janitor)
 library(ggpubr)
 library(WDI)
 library(kableExtra)
+library(terra)
 
 #### Paths
 
@@ -98,8 +99,29 @@ load_gadm <- function(i){
     })
 }
 
+#### Elevation
+dir.create(file.path(data_dir, "elevation"))
+
+OUT_PATH <- file.path(data_dir, "elevation", "elev.tiff")
+
+if(!file.exists(OUT_PATH)){
+  
+  if(length(iso3_code) > 1){
+    elev_r <- elevation_30s(country=iso3_code, path=tempdir())
+    
+  } else{
+    elev_list <- lapply(iso3_code, function(iso3_code_i){
+      elevation_30s(country=iso3_code_i, path=tempdir())
+    }) 
+    elev_r <- do.call(mosaic, c(elev_list, fun="mean"))
+  }
+  
+  writeRaster(elev_r, OUT_PATH)
+  
+}
+
 #### NTL Months to Download
-ntl_months <- seq.Date(ymd("2023-11-01"), to = ymd("2023-12-01"), by = "month") %>%
+ntl_months <- seq.Date(ymd("2012-01-01"), to = ymd("2024-06-01"), by = "month") %>%
   as.character()
 
 #### Colors
@@ -543,18 +565,28 @@ leaflet() %>%
 ## Load boundaries
 adm0_sf <- load_gadm(0)
 
+## Elevation
+elev_r <- rast(file.path(data_dir, "elevation", "elev.tiff"))
+
 ## Latest Year
 r <- rast(file.path(ntl_bm_dir, "rasters", "annual",
                     paste0("VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",2023,".tif")))
 r <- r %>% mask(adm0_sf)
 r[] <- log(r[] + 1)
 
+library(ggnewscale)
+
+r[][r[] <= 1] <- NA
 ggplot() +
-  geom_spatraster(data = r) +
-  scale_fill_gradient2(low = "black",
-                       mid = "yellow",
-                       high = "red",
-                       midpoint = 4,
+  geom_spatraster(data = elev_r, show.legend = FALSE) +
+  scale_fill_gradient(low = "#49232E",
+                      high = "black",
+                      na.value = "transparent") +
+  ggnewscale::new_scale_fill() +
+  geom_spatraster(data = r,
+                  aes(fill = t2023)) +
+  scale_fill_distiller(palette = "YlGnBl",
+                       #midpoint = 2,
                        na.value = "transparent") +
   labs(title = "Nighttime Lights: 2023") +
   coord_sf() +
@@ -562,7 +594,6 @@ ggplot() +
   theme(plot.title = element_text(face = "bold", hjust = 0.5),
         legend.position = "none")
 ```
-
 # Diagnostics
 
 ## Nighttime Lights: Gas Flaring vs Non Gas Flaring
@@ -840,6 +871,23 @@ ntl_df %>%
   theme(legend.position = "top")
 ```
 
+```{r}
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
+                            paste0("ntl_", "adm0", "_", "monthly", ".Rds")))
+
+ntl_df %>%
+  dplyr::mutate(date = date %>% ymd()) %>%
+  dplyr::filter(date >= ymd("2020-01-01")) %>%
+  ggplot() +
+  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_col(aes(x = date, y = ntl_sum),
+           fill = wbg_color_light) +
+  facet_wrap(~COUNTRY) +
+  labs(x = NULL,
+       y = "Nighttime Lights") +
+  theme_manual
+```
+
 ### ADM 1: Top ADM Units
 ```{r}
 ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
@@ -887,6 +935,24 @@ ntl_df %>%
                                 wbg_color_dark)) +
   theme_manual +
   theme(legend.position = "top")
+```
+
+```{r}
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
+                            paste0("ntl_", "adm1", "_", "monthly", ".Rds")))
+
+ntl_df %>%
+  dplyr::mutate(date = date %>% ymd()) %>%
+  dplyr::filter(date >= ymd("2020-01-01")) %>%
+  filter(NAME_1 %in% top_adm) %>%
+  ggplot() +
+  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_col(aes(x = date, y = ntl_sum),
+           fill = wbg_color_light) +
+  facet_wrap(~NAME_1) +
+  labs(x = NULL,
+       y = "Nighttime Lights") +
+  theme_manual 
 ```
 
 ### ADM 2: Top ADM Units
@@ -938,6 +1004,24 @@ ntl_df %>%
   theme(legend.position = "top")
 ```
 
+```{r}
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
+                            paste0("ntl_", "adm2", "_", "monthly", ".Rds")))
+
+ntl_df %>%
+  dplyr::mutate(date = date %>% ymd()) %>%
+  dplyr::filter(date >= ymd("2020-01-01")) %>%
+  filter(NAME_2 %in% top_adm) %>%
+  ggplot() +
+  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_col(aes(x = date, y = ntl_sum),
+           fill = wbg_color_light) +
+  facet_wrap(~NAME_2) +
+  labs(x = NULL,
+       y = "Nighttime Lights") +
+  theme_manual 
+```
+
 ### Top Cities
 ```{r}
 ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
@@ -986,6 +1070,24 @@ ntl_df %>%
                                 wbg_color_dark)) +
   theme_manual +
   theme(legend.position = "top")
+```
+
+```{r}
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", 
+                            paste0("ntl_", "cities5km", "_", "monthly", ".Rds")))
+
+ntl_df %>%
+  dplyr::mutate(date = date %>% ymd()) %>%
+  dplyr::filter(date >= ymd("2020-01-01")) %>%
+  filter(geoname_id %in% top_adm) %>%
+  ggplot() +
+  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_col(aes(x = date, y = ntl_sum),
+           fill = wbg_color_light) +
+  facet_wrap(~name) +
+  labs(x = NULL,
+       y = "Nighttime Lights") +
+  theme_manual 
 ```
 
 # % Change Maps
@@ -1044,6 +1146,7 @@ ggplot() +
   theme_void() +
   theme(strip.text = element_text(face = "bold"))
 ```
+
 ## ADM 2
 ```{r}
 
@@ -1098,3 +1201,55 @@ ggplot() +
   theme_void() +
   theme(strip.text = element_text(face = "bold"))
 ```
+
+# % Change Maps: Before/After Conflict
+
+Percent change in NTL: Jan - March 2023, vs May - Dec 2023
+
+```{r}
+
+## Load
+adm_sf <- load_gadm(2)
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", "ntl_adm2_monthly.Rds"))
+
+## Prep data
+ntl_wide_df <- ntl_df %>%
+  dplyr::mutate(date = date %>% ymd(),
+                year = date %>% year(),
+                date_month = date %>% month(),
+                period = case_when(
+                  date_month %in% 1:3 ~ "ntl_before",
+                  date_month %in% 5:12 ~ "ntl_after"
+                )) %>%
+  dplyr::filter(year == 2023,
+                !is.na(period)) %>%
+  group_by(GID_2, period) %>%
+  dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = GID_2,
+              names_from = period,
+              values_from = ntl_sum) %>%
+  dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100)
+
+adm_sf <- adm_sf %>%
+  left_join(ntl_wide_df, by = "GID_2")
+
+adm_sf$value[adm_sf$pc >= 100] <- 100
+adm_sf$value[adm_sf$pc <= -100] <- -100
+
+ggplot() +
+  geom_sf(data = adm_sf,
+          aes(fill = pc)) +
+  labs(fill = "% Change") +
+  scale_fill_gradient2(low = "red",
+                       mid = "white",
+                       high = "forestgreen",
+                       midpoint = 0,
+                       limits = c(-100, 100),
+                       breaks = c(-100, -50, 0, 50, 100),
+                       labels = c("< -100", "-50", "0", "50", "> 100")) +
+  theme_manual +
+  theme_void() +
+  theme(strip.text = element_text(face = "bold"))
+```
+
