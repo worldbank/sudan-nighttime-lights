@@ -10,6 +10,9 @@ parts:
       - file: docs/2-analytics
       - file: notebooks/nighttime-lights.html
       - file: notebooks/Crop_productivity.ipynb
+      - file: notebooks/conflict/conflict.md
+        sections:
+        - file: notebooks/conflict/acled.ipynb
   - caption: Additional Resources
     chapters:
       - file: docs/3-add-resources
