@@ -20,3 +20,5 @@ Every ACLED event is based on at least one source. The source names or acronyms 
 * Granularity: Point location of the reported conflict
 * License: Accessing ACLED data requires abiding by their [Terms of Use](https://acleddata.com/terms-of-use/).
 * **Data Access**: Access to this data is via a contract between the World bank and ACLED and can be extracted by any World Bank employee upon registering for an API key. For assistance, please write to [datalab@worldbank.org](mailto:datalab@worldbank.org)
+
+
