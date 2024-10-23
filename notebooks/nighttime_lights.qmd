@@ -30,8 +30,8 @@ Within different units of analysis (e.g, administrative units) we use the sum of
 
 #### MAIN PARAMS
 proj_dir     <- "~/Dropbox/World Bank/Side Work/Sudan Economic Monitor"
-iso3_code    <- c("SSD", "SDN")
-iso2_code    <- c("SS", "SD")
+iso3_code    <- c("SDN")
+iso2_code    <- c("SD")
 pc_base_year <- 2019
 
 #### Packages
@@ -55,6 +55,7 @@ library(ggpubr)
 library(WDI)
 library(kableExtra)
 library(terra)
+library(DT)
 
 #### Paths
 
@@ -82,7 +83,7 @@ theme_manual <- theme_classic2() +
         plot.title = element_text(face = "bold"))
 
 #### GADM Boundaries
-for(i in 0:2){
+for(i in 0:3){
   for(iso3_i in iso3_code){
     gadm(iso3_code, level=i, path = file.path(gadm_dir))
   }
@@ -360,6 +361,7 @@ dir.create(file.path(ntl_bm_dir, "aggregated_individual_files"))
 for(unit in c("adm0", 
               "adm1", 
               "adm2",
+              "adm3",
               "cities5km",
               "cities10km",
               "citiesbuff")){
@@ -395,6 +397,10 @@ for(unit in c("adm0",
         
         if(unit == "adm2"){
           roi_sf <- load_gadm(2)
+        }
+        
+        if(unit == "adm3"){
+          roi_sf <- load_gadm(3)
         }
         
         if(unit == "cities5km"){
@@ -438,13 +444,13 @@ for(unit in c("adm0",
         ntl_nogf_10km_r <- mask(ntl_r, gs_10km_sf, inverse = T)
         
         #### Extract NTL
-        roi_sf$ntl_sum          <- exact_extract(ntl_r, roi_sf, "sum")
+        roi_sf$ntl_sum          <- exact_extract(ntl_r, roi_sf, "sum", progress = F)
         
-        roi_sf$ntl_gf_5km_sum   <- exact_extract(ntl_gf_5km_r, roi_sf, "sum")
-        roi_sf$ntl_nogf_5km_sum <- exact_extract(ntl_nogf_5km_r, roi_sf, "sum")
+        roi_sf$ntl_gf_5km_sum   <- exact_extract(ntl_gf_5km_r, roi_sf, "sum", progress = F)
+        roi_sf$ntl_nogf_5km_sum <- exact_extract(ntl_nogf_5km_r, roi_sf, "sum", progress = F)
         
-        roi_sf$ntl_gf_10km_sum   <- exact_extract(ntl_gf_10km_r, roi_sf, "sum")
-        roi_sf$ntl_nogf_10km_sum <- exact_extract(ntl_nogf_10km_r, roi_sf, "sum")
+        roi_sf$ntl_gf_10km_sum   <- exact_extract(ntl_gf_10km_r, roi_sf, "sum", progress = F)
+        roi_sf$ntl_nogf_10km_sum <- exact_extract(ntl_nogf_10km_r, roi_sf, "sum", progress = F)
         
         #### Cleanup
         roi_sf$date <- time_i
@@ -466,6 +472,7 @@ dir.create(file.path(ntl_bm_dir, "aggregated"))
 for(unit in c("adm0", 
               "adm1", 
               "adm2",
+              "adm3",
               "cities5km",
               "cities10km",
               "citiesbuff")){
@@ -567,11 +574,12 @@ adm0_sf <- load_gadm(0)
 
 ## Elevation
 elev_r <- rast(file.path(data_dir, "elevation", "elev.tiff"))
+elev_r <- elev_r %>% crop(adm0_sf) %>% mask(adm0_sf)
 
 ## Latest Year
 r <- rast(file.path(ntl_bm_dir, "rasters", "annual",
                     paste0("VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",2023,".tif")))
-r <- r %>% mask(adm0_sf)
+r <- r %>% crop(adm0_sf) %>% mask(adm0_sf)
 r[] <- log(r[] + 1)
 
 library(ggnewscale)
@@ -1202,7 +1210,9 @@ ggplot() +
   theme(strip.text = element_text(face = "bold"))
 ```
 
-# % Change Maps: Before/After Conflict
+# Change Before and After Conflict
+
+## % Change ADM2 Map
 
 Percent change in NTL: Jan - March 2023, vs May - Dec 2023
 
@@ -1252,4 +1262,215 @@ ggplot() +
   theme_void() +
   theme(strip.text = element_text(face = "bold"))
 ```
+
+## % Change ADM3 Map
+
+Percent change in NTL: Jan - March 2023, vs May - Dec 2023
+
+```{r}
+
+## Load
+adm_sf <- load_gadm(3)
+ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", "ntl_adm3_monthly.Rds"))
+
+## Prep data
+ntl_wide_df <- ntl_df %>%
+  dplyr::mutate(date = date %>% ymd(),
+                year = date %>% year(),
+                date_month = date %>% month(),
+                period = case_when(
+                  date_month %in% 1:3 ~ "ntl_before",
+                  date_month %in% 5:12 ~ "ntl_after"
+                )) %>%
+  dplyr::filter(year == 2023,
+                !is.na(period)) %>%
+  group_by(GID_3, period) %>%
+  dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = GID_3,
+              names_from = period,
+              values_from = ntl_sum) %>%
+  dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100)
+
+adm_sf <- adm_sf %>%
+  left_join(ntl_wide_df, by = "GID_3")
+
+adm_sf$value[adm_sf$pc >= 100] <- 100
+adm_sf$value[adm_sf$pc <= -100] <- -100
+
+ggplot() +
+  geom_sf(data = adm_sf,
+          aes(fill = pc)) +
+  labs(fill = "% Change") +
+  scale_fill_gradient2(low = "red",
+                       mid = "white",
+                       high = "forestgreen",
+                       midpoint = 0,
+                       limits = c(-100, 100),
+                       breaks = c(-100, -50, 0, 50, 100),
+                       labels = c("< -100", "-50", "0", "50", "> 100")) +
+  theme_manual +
+  theme_void() +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+## % Change Pixel Map
+
+```{r}
+adm0_sf <- load_gadm(0)
+
+r_before <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_01|2023_02|2023_03") %>%
+  rast() %>%
+  mean()
+
+r_after <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_05|2023_06|2023_07|2023_08|2023_09|2023_10|2023_11|2023_12") %>%
+  rast() %>%
+  mean()
+
+r_c <- (r_after - r_before) / r_before * 100
+r_c[r_before < 1] <- NA
+r_c[r_c >= 100]  <- 100
+r_c[r_c <= -100] <- -100
+r_c <- r_c %>% crop(adm0_sf) %>% mask(adm0_sf)
+
+# ggplot() +
+#   geom_spatraster(data = r_c) +
+#   geom_sf(data = adm0_sf,
+#           fill = NA,
+#           color = "black") +
+#   scale_fill_gradient2(low = "red", mid = "white", high = "green", 
+#                        midpoint = 0,
+#                        na.value = "white") +
+#   theme_void()
+
+library(leaflet)
+library(leaflet.extras)
+
+# Define color palette for raster values
+pal <- colorNumeric(palette = colorRamp(c("red", "black", "green")),
+                    domain = values(r_c), na.color = NA)
+
+# Create leaflet map
+leaflet() %>%
+  addTiles() %>%
+  addRasterImage(r_c, colors = pal, opacity = 1) %>%
+  #addPolygons(data = adm0_sf, color = "black", fill = NA) %>%
+  addLegend(pal = pal, values = values(r_c), title = "% Change") %>%
+  setView(lng = 0, lat = 0, zoom = 2)  # Adjust longitude, latitude, and zoom as needed
+
+```
+
+## Table of % Change
+
+The below tables show the percent change in lights after the conflict, quarterly, relative to 2022.
+
+```{r}
+#### Prep Rasters
+r_before <- file.path(ntl_bm_dir, "rasters", "annual") %>%
+  list.files(full.names = T) %>%
+  str_subset("2022") %>%
+  rast() 
+
+r_2023_04_06 <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_04|2023_05|2023_06") %>%
+  rast() %>%
+  mean()
+
+r_2023_07_09 <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_07|2023_08|2023_09") %>%
+  rast() %>%
+  mean()
+
+r_2023_10_12 <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_10|2023_11|2023_12") %>%
+  rast() %>%
+  mean()
+
+r_2024_01_03 <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_01|2023_02|2023_03") %>%
+  rast() %>%
+  mean()
+
+r_2024_04_06 <- file.path(ntl_bm_dir, "rasters", "monthly") %>%
+  list.files(full.names = T) %>%
+  str_subset("2023_04|2023_05|2023_06") %>%
+  rast() %>%
+  mean()
+
+make_table <- function(roi_sf, unit_name){
+  
+  roi_sf$ntl_2022       <- exact_extract(r_before,     roi_sf, "sum", progress = F)
+  roi_sf$ntl_2023_04_06 <- exact_extract(r_2023_04_06, roi_sf, "sum", progress = F)
+  roi_sf$ntl_2023_07_09 <- exact_extract(r_2023_07_09, roi_sf, "sum", progress = F)
+  roi_sf$ntl_2023_10_12 <- exact_extract(r_2023_10_12, roi_sf, "sum", progress = F)
+  roi_sf$ntl_2024_01_03 <- exact_extract(r_2024_01_03, roi_sf, "sum", progress = F)
+  roi_sf$ntl_2024_04_06 <- exact_extract(r_2024_04_06, roi_sf, "sum", progress = F)
+  
+  roi_sf <- roi_sf %>%
+    dplyr::mutate(pc_2023_04_06 = (ntl_2023_04_06 - ntl_2022) / ntl_2022 * 100,
+                  pc_2023_07_09 = (ntl_2023_07_09 - ntl_2022) / ntl_2022 * 100,
+                  pc_2023_10_12 = (ntl_2023_10_12 - ntl_2022) / ntl_2022 * 100,
+                  pc_2024_01_03 = (ntl_2024_01_03 - ntl_2022) / ntl_2022 * 100,
+                  pc_2024_04_06 = (ntl_2024_04_06 - ntl_2022) / ntl_2022 * 100) %>%
+    st_drop_geometry() %>%
+    dplyr::filter(ntl_2022 > 0)
+  
+  roi_sf$Name <- roi_sf[[unit_name]]
+  
+  roi_sf %>%
+    dplyr::select(Name, ntl_2022, contains("pc_")) %>%
+    dplyr::mutate(across(c(ntl_2022, contains("pc_")), ~ round(.x, 2))) %>%
+    dplyr::rename("NTL: 2022" = ntl_2022,
+                  "% Change: 2023 Q2"= pc_2023_04_06,
+                  "% Change: 2023 Q3"= pc_2023_07_09,
+                  "% Change: 2023 Q4"= pc_2023_10_12,
+                  "% Change: 2024 Q1"= pc_2024_01_03,
+                  "% Change: 2024 Q2"= pc_2024_04_06) %>%
+    DT::datatable() 
+}
+```
+
+### Country Level
+
+```{r}
+roi_sf <- load_gadm(0)
+make_table(roi_sf, "COUNTRY")
+```
+
+### ADM 1
+
+```{r}
+roi_sf <- load_gadm(1)
+make_table(roi_sf, "NAME_1")
+```
+
+### ADM 2
+
+```{r}
+roi_sf <- load_gadm(2)
+make_table(roi_sf, "NAME_2")
+```
+
+### ADM 3
+
+```{r}
+roi_sf <- load_gadm(3)
+make_table(roi_sf, "NAME_3")
+```
+
+### Cities
+
+```{r}
+roi_sf <- readRDS(file.path(data_dir, "cities", "cities_country_buff_sf.Rds"))
+make_table(roi_sf, "ascii_name")
+```
+
 
