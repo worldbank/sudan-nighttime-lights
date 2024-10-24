@@ -7,9 +7,8 @@ parts:
       - file: docs/1-intro-to-data-lab
   - caption: Analytics
     chapters:
-      - file: docs/2-analytics
-      - file: notebooks/nighttime-lights.html
-      - file: notebooks/Crop_productivity.ipynb
+      - file: notebooks/agriculture/Crop_productivity.ipynb
+      - file: notebooks/ntl-analysis/nighttime_lights.html
       - file: notebooks/conflict/conflict.md
         sections:
         - file: notebooks/conflict/acled.ipynb
