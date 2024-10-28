@@ -12,11 +12,15 @@ repository:
 # HTML-specific settings
 html:
   home_page_in_navbar: false
-  extra_navbar: ""
+  extra_navbar: |
+  <nav>
+      <a href="index.html">Home</a> |
+      <a href="nighttime_lights_iran.html">Nighttime Lights in Sudan</a> |
+    </nav>
   use_edit_page_button: true
   use_repository_button: true
   use_issues_button: true
-  baseurl: https://worldbank.github.io/sudan-poverty-monitoring/
+  baseurl: "/sudan-poverty-monitoring/"  # Use relative URL for GitHub Pages compatibility"
   extra_footer: |
     <div>
      Country borders or names do not necessarily reflect the World Bank Group’s official position. All maps are for illustrative purposes and do not imply the expression of any opinion on the part of the World Bank, concerning the legal status of any country or territory or concerning the delimitation of frontiers or boundaries
