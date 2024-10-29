@@ -5,7 +5,7 @@ logo: docs/images/logo.png
 only_build_toc_files: false
 
 repository:
-  url: https://github.com/worldbank/sudan-poverty-monitoring
+  url: https://github.com/datapartnership/sudan-economic-monitoring
   branch: main
 
 #######################################################################################
@@ -20,10 +20,10 @@ html:
   use_edit_page_button: true
   use_repository_button: true
   use_issues_button: true
-  baseurl: "/sudan-poverty-monitoring/"  # Use relative URL for GitHub Pages compatibility"
+  baseurl: "/sudan-economic-monitoring/"  # Use relative URL for GitHub Pages compatibility
   extra_footer: |
     <div>
-     Country borders or names do not necessarily reflect the World Bank Group’s official position. All maps are for illustrative purposes and do not imply the expression of any opinion on the part of the World Bank, concerning the legal status of any country or territory or concerning the delimitation of frontiers or boundaries
+     Country borders or names do not necessarily reflect the World Bank Group’s official position. All maps are for illustrative purposes and do not imply the expression of any opinion on the part of the World Bank, concerning the legal status of any country or territory or concerning the delimitation of frontiers or boundaries.
     </div>
     <div>
         <b>All content (unless otherwise specified) is subject to the <a href="https://www.mozilla.org/en-US/MPL">Mozilla Public License.</a></b>
@@ -33,7 +33,7 @@ html:
 #######################################################################################
 # Execution settings
 execute:
-  execute_notebooks: off
+  execute_notebooks: off  # Do not execute notebooks
 
 #######################################################################################
 # Bibliography settings
