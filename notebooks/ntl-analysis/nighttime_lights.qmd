@@ -47,6 +47,7 @@ library(readxl)
 library(janitor)
 library(geodata)
 library(exactextractr)
+library(haven)
 library(blackmarbler)
 library(dplyr)
 library(readxl)
@@ -98,6 +99,13 @@ load_gadm <- function(i){
       readRDS(file_path) %>%
         st_as_sf()
     })
+}
+
+#### HDX Boundaries
+if(F){
+  hdx2_sf <- read_sf(file.path(data_dir, "hdx-boundaries", "sdn_adm_cbs_nic_ssa_20200831.gdb"),
+                     "sdn_admbnda_adm2_cbs_nic_ssa_20200831")
+  saveRDS(hdx2_sf, file.path(data_dir, "hdx-boundaries", "adm2_hdx.Rds"))
 }
 
 #### Elevation
@@ -362,6 +370,7 @@ for(unit in c("adm0",
               "adm1", 
               "adm2",
               "adm3",
+              "hdx_adm2",
               "cities5km",
               "cities10km",
               "citiesbuff")){
@@ -401,6 +410,10 @@ for(unit in c("adm0",
         
         if(unit == "adm3"){
           roi_sf <- load_gadm(3)
+        }
+        
+        if(unit == "hdx_adm2"){
+          roi_sf <- readRDS(file.path(data_dir, "hdx-boundaries", "adm2_hdx.Rds"))
         }
         
         if(unit == "cities5km"){
@@ -473,6 +486,7 @@ for(unit in c("adm0",
               "adm1", 
               "adm2",
               "adm3",
+              "hdx_adm2",
               "cities5km",
               "cities10km",
               "citiesbuff")){
@@ -485,7 +499,157 @@ for(unit in c("adm0",
     
     saveRDS(ntl_df,   file.path(ntl_bm_dir, "aggregated", paste0("ntl_", unit, "_", time_type, ".Rds")))
     write_csv(ntl_df, file.path(ntl_bm_dir, "aggregated", paste0("ntl_", unit, "_", time_type, ".csv")))
+    write_dta(ntl_df, file.path(ntl_bm_dir, "aggregated", paste0("ntl_", unit, "_", time_type, ".dta")))
+
+  }
+}
+
+```
+
+## Aggregate Nighttime Lights - colorado school of mines
+```{r}
+#| warning: false
+#| message: false
+
+# Individual Files -------------------------------------------------------------
+dir.create(file.path(ntl_bm_dir, "aggregated_individual_files"))
+
+#### Setup loops
+for(unit in c("adm0", 
+              "adm1", 
+              "adm2",
+              "adm3",
+              "hdx_adm2",
+              "cities5km",
+              "cities10km",
+              "citiesbuff")){
+  for(time_type in c("annual")){
     
+    if(time_type == "annual"){
+      time_vec <- 2013:2024
+    }
+    
+    if(time_type == "monthly"){
+      time_vec <- ntl_months
+    }
+    
+    for(time_i in time_vec){
+      
+      #### Only process if file doesn't exist
+      dir.create(file.path(data_dir, "viirs-gee", "finaldata", "aggregated_individual_files", unit))
+      dir.create(file.path(data_dir, "viirs-gee", "finaldata", "aggregated_individual_files", unit, time_type))
+      
+      OUT_FILE <- file.path(data_dir, "viirs-gee", "finaldata", "aggregated_individual_files", unit, time_type, 
+                            paste0("ntl_", time_i, ".Rds"))
+      
+      if(!file.exists(OUT_FILE)){
+        
+        #### Load Unit
+        if(unit == "adm0"){
+          roi_sf <- load_gadm(0)
+        }
+        
+        if(unit == "adm1"){
+          roi_sf <- load_gadm(1)
+        }
+        
+        if(unit == "adm2"){
+          roi_sf <- load_gadm(2)
+        }
+        
+        if(unit == "adm3"){
+          roi_sf <- load_gadm(3)
+        }
+        
+        if(unit == "hdx_adm2"){
+          roi_sf <- readRDS(file.path(data_dir, "hdx-boundaries", "adm2_hdx.Rds"))
+        }
+        
+        if(unit == "cities5km"){
+          roi_sf <- readRDS(file.path(data_dir, "cities", "cities_country_5km_sf.Rds"))
+        }
+        
+        if(unit == "cities10km"){
+          roi_sf <- readRDS(file.path(data_dir, "cities", "cities_country_10km_sf.Rds"))
+        }
+        
+        if(unit == "citiesbuff"){
+          roi_sf <- readRDS(file.path(data_dir, "cities", "cities_country_buff_sf.Rds"))
+        }
+        
+        
+        #### Load Raster
+        if(time_type == "annual"){
+          bm_product <- "VNP46A4"
+          time_raster_i <- time_i 
+        }
+        
+        if(time_type == "monthly"){
+          bm_product <- "VNP46A3"
+          
+          time_raster_i <- time_i %>% 
+            substring(1, 7) %>%
+            str_replace_all("-", "_")
+        }
+        
+        ntl_r <- rast(file.path(data_dir, "viirs-gee", "rawdata", time_type, 
+                                paste0("SDN_viirs_corrected_mean_",time_i,".tif")))
+        
+        #### Gas Flaring Mask
+        gs_5km_sf  <- readRDS(file.path(gas_flare_dir, "finaldata", "gas_flare_locations_5km.Rds"))
+        gs_10km_sf <- readRDS(file.path(gas_flare_dir, "finaldata", "gas_flare_locations_10km.Rds"))
+        
+        ntl_gf_5km_r   <- mask(ntl_r, gs_5km_sf)
+        ntl_nogf_5km_r <- mask(ntl_r, gs_5km_sf, inverse = T)
+        
+        ntl_gf_10km_r   <- mask(ntl_r, gs_10km_sf)
+        ntl_nogf_10km_r <- mask(ntl_r, gs_10km_sf, inverse = T)
+        
+        #### Extract NTL
+        roi_sf$ntl_sum          <- exact_extract(ntl_r, roi_sf, "sum", progress = F)
+        
+        roi_sf$ntl_gf_5km_sum   <- exact_extract(ntl_gf_5km_r, roi_sf, "sum", progress = F)
+        roi_sf$ntl_nogf_5km_sum <- exact_extract(ntl_nogf_5km_r, roi_sf, "sum", progress = F)
+        
+        roi_sf$ntl_gf_10km_sum   <- exact_extract(ntl_gf_10km_r, roi_sf, "sum", progress = F)
+        roi_sf$ntl_nogf_10km_sum <- exact_extract(ntl_nogf_10km_r, roi_sf, "sum", progress = F)
+        
+        #### Cleanup
+        roi_sf$date <- time_i
+        
+        roi_df <- roi_sf %>%
+          st_drop_geometry()
+        
+        #### Export
+        saveRDS(roi_df, OUT_FILE)
+        
+      }
+    }
+  }
+}
+
+#### Append Files
+dir.create(file.path(ntl_bm_dir, "aggregated"))
+
+for(unit in c("adm0", 
+              "adm1", 
+              "adm2",
+              "adm3",
+              "hdx_adm2",
+              "cities5km",
+              "cities10km",
+              "citiesbuff")){
+  for(time_type in c("annual", "monthly")){
+    
+    ntl_df <- file.path(data_dir, "viirs-gee", "finaldata", "aggregated_individual_files", unit, time_type) %>%
+      list.files(full.names = T,
+                 pattern = ".Rds") %>%
+      map_df(readRDS)
+    
+    saveRDS(ntl_df,   file.path(data_dir, "viirs-gee", "finaldata", "aggregated", paste0("ntl_", unit, "_", time_type, ".Rds")))
+    write_csv(ntl_df, file.path(data_dir, "viirs-gee", "finaldata", "aggregated", paste0("ntl_", unit, "_", time_type, ".csv")))
+    write_dta(ntl_df, file.path(data_dir, "viirs-gee", "finaldata", "aggregated", paste0("ntl_", unit, "_", time_type, ".dta")))
+
   }
 }
 
@@ -1402,6 +1566,153 @@ leaflet() %>%
   setView(lng = 0, lat = 0, zoom = 2)  # Adjust longitude, latitude, and zoom as needed
 
 ```
+
+## Maps - 2022 vs 2024
+
+### % Change ADM2 Map
+
+Percent change in NTL: 2022, vs 2024
+
+```{r}
+
+## Load
+adm_sf <- load_gadm(2)
+ntl_df <- readRDS(file.path(data_dir, "viirs-gee", "finaldata", "aggregated", "ntl_adm2_annual.Rds"))
+
+## Prep data
+ntl_wide_df <- ntl_df %>%
+  dplyr::mutate(period = case_when(
+                  date %in% 2022 ~ "ntl_before",
+                  date %in% 2024 ~ "ntl_after"
+                )) %>%
+  dplyr::filter(!is.na(period)) %>%
+  group_by(GID_2, period) %>%
+  dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = GID_2,
+              names_from = period,
+              values_from = ntl_sum) %>%
+  dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100)
+
+adm_sf <- adm_sf %>%
+  left_join(ntl_wide_df, by = "GID_2")
+
+adm_sf$value <- adm_sf$pc
+adm_sf$value[adm_sf$pc >= 100] <- 100
+adm_sf$value[adm_sf$pc <= -100] <- -100
+
+ggplot() +
+  geom_sf(data = adm_sf,
+          aes(fill = pc)) +
+  labs(fill = "% Change") +
+  scale_fill_gradient2(low = "red",
+                       mid = "white",
+                       high = "forestgreen",
+                       midpoint = 0,
+                       limits = c(-100, 100),
+                       breaks = c(-100, -50, 0, 50, 100),
+                       labels = c("< -100", "-50", "0", "50", "> 100")) +
+  theme_manual +
+  theme_void() +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+### % Change ADM3 Map
+
+Percent change in NTL: 2022, vs 2024
+
+```{r}
+
+## Load
+adm_sf <- load_gadm(3)
+ntl_df <- readRDS(file.path(data_dir, "viirs-gee", "finaldata", "aggregated", "ntl_adm3_annual.Rds"))
+
+## Prep data
+ntl_wide_df <- ntl_df %>%
+  dplyr::mutate(period = case_when(
+                  date %in% 2022 ~ "ntl_before",
+                  date %in% 2024 ~ "ntl_after"
+                )) %>%
+  dplyr::filter(!is.na(period)) %>%
+  group_by(GID_3, period) %>%
+  dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
+  ungroup() %>%
+  pivot_wider(id_cols = GID_3,
+              names_from = period,
+              values_from = ntl_sum) %>%
+  dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100)
+
+adm_sf <- adm_sf %>%
+  left_join(ntl_wide_df, by = "GID_3")
+
+adm_sf$value <- adm_sf$pc
+adm_sf$value[adm_sf$pc >= 100] <- 100
+adm_sf$value[adm_sf$pc <= -100] <- -100
+
+ggplot() +
+  geom_sf(data = adm_sf,
+          aes(fill = pc)) +
+  labs(fill = "% Change") +
+  scale_fill_gradient2(low = "red",
+                       mid = "white",
+                       high = "forestgreen",
+                       midpoint = 0,
+                       limits = c(-100, 100),
+                       breaks = c(-100, -50, 0, 50, 100),
+                       labels = c("< -100", "-50", "0", "50", "> 100")) +
+  theme_manual +
+  theme_void() +
+  theme(strip.text = element_text(face = "bold"))
+```
+
+### % Change Pixel Map
+
+Percent change in NTL: 2022, vs 2024
+
+```{r}
+adm0_sf <- load_gadm(0)
+
+r_before <- file.path(data_dir, "viirs-gee", "rawdata", "annual", "SDN_viirs_corrected_mean_2022.tif") %>%
+  rast()
+
+r_after <- file.path(data_dir, "viirs-gee", "rawdata", "annual", "SDN_viirs_corrected_mean_2024.tif") %>%
+  rast()
+
+r_c <- (r_after - r_before) / r_before * 100
+r_c[r_before < 1] <- NA
+r_c[r_c >= 100]  <- 100
+r_c[r_c <= -100] <- -100
+r_c <- r_c %>% crop(adm0_sf) %>% mask(adm0_sf)
+
+# ggplot() +
+#   geom_spatraster(data = r_c) +
+#   geom_sf(data = adm0_sf,
+#           fill = NA,
+#           color = "black") +
+#   scale_fill_gradient2(low = "red", mid = "white", high = "green", 
+#                        midpoint = 0,
+#                        na.value = "white") +
+#   theme_void()
+
+library(leaflet)
+library(leaflet.extras)
+
+# Define color palette for raster values
+pal <- colorNumeric(palette = colorRamp(c("red", "black", "green")),
+                    domain = values(r_c), na.color = NA)
+
+# Create leaflet map
+leaflet() %>%
+  addTiles() %>%
+  addRasterImage(r_c, colors = pal, opacity = 1) %>%
+  #addPolygons(data = adm0_sf, color = "black", fill = NA) %>%
+  addLegend(pal = pal, values = values(r_c), title = "% Change") %>%
+  setView(lng = 0, lat = 0, zoom = 2)  # Adjust longitude, latitude, and zoom as needed
+
+```
+
+
+
 ## Table of % Change: Before/After Conflict in 2023
 
 The below tables show the percent change in lights from Jan - March 2023 to May - Dec 2023.
@@ -1424,7 +1735,7 @@ make_table <- function(roi_sf, unit_name){
   
   roi_sf$ntl_before <- exact_extract(r_before,     roi_sf, "sum", progress = F)
   roi_sf$ntl_after  <- exact_extract(r_after, roi_sf, "sum", progress = F)
-
+  
   roi_sf <- roi_sf %>%
     dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100) %>%
     st_drop_geometry() %>%
@@ -1548,6 +1859,75 @@ make_table <- function(roi_sf, unit_name){
                   "% Change: 2023 Q4"= pc_2023_10_12,
                   "% Change: 2024 Q1"= pc_2024_01_03,
                   "% Change: 2024 Q2"= pc_2024_04_06) %>%
+    DT::datatable() 
+}
+```
+
+### Country Level
+
+```{r}
+roi_sf <- load_gadm(0)
+make_table(roi_sf, "COUNTRY")
+```
+
+### ADM 1
+
+```{r}
+roi_sf <- load_gadm(1)
+make_table(roi_sf, "NAME_1")
+```
+
+### ADM 2
+
+```{r}
+roi_sf <- load_gadm(2)
+make_table(roi_sf, "NAME_2")
+```
+
+### ADM 3
+
+```{r}
+roi_sf <- load_gadm(3)
+make_table(roi_sf, "NAME_3")
+```
+
+### Cities
+
+```{r}
+roi_sf <- readRDS(file.path(data_dir, "cities", "cities_country_buff_sf.Rds"))
+make_table(roi_sf, "ascii_name")
+```
+
+## Table of % Change: Before/After Conflict: 2022 vs 2024
+
+The below tables show the percent change in lights from 2022 to 2024
+
+```{r}
+#### Prep Rasters
+r_before <- file.path(data_dir, "viirs-gee", "rawdata", "annual", "SDN_viirs_corrected_mean_2022.tif") %>%
+  rast()
+
+r_after <- file.path(data_dir, "viirs-gee", "rawdata", "annual", "SDN_viirs_corrected_mean_2024.tif") %>%
+  rast()
+
+make_table <- function(roi_sf, unit_name){
+  
+  roi_sf$ntl_before <- exact_extract(r_before, roi_sf, "sum", progress = F)
+  roi_sf$ntl_after  <- exact_extract(r_after,  roi_sf, "sum", progress = F)
+  
+  roi_sf <- roi_sf %>%
+    dplyr::mutate(pc = (ntl_after - ntl_before) / ntl_before * 100) %>%
+    st_drop_geometry() %>%
+    dplyr::filter(ntl_before > 0)
+  
+  roi_sf$Name <- roi_sf[[unit_name]]
+  
+  roi_sf %>%
+    dplyr::select(Name, ntl_before, ntl_after, pc) %>%
+    dplyr::mutate(across(c(ntl_before, ntl_after, pc), ~ round(.x, 2))) %>%
+    dplyr::rename("NTL: 2022" = ntl_before,
+                  "NTL: 2024" = ntl_after,
+                  "% Change"= pc) %>%
     DT::datatable() 
 }
 ```
