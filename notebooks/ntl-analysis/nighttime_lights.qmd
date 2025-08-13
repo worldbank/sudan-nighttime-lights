@@ -130,7 +130,7 @@ if(!file.exists(OUT_PATH)){
 }
 
 #### NTL Months to Download
-ntl_months <- seq.Date(ymd("2012-01-01"), to = ymd("2025-01-01"), by = "month") %>%
+ntl_months <- seq.Date(ymd("2012-01-01"), to = ymd("2025-06-01"), by = "month") %>%
   as.character()
 
 #### Colors
@@ -343,7 +343,7 @@ dir.create(file.path(ntl_bm_dir, "rasters", "monthly"))
 
 r <- bm_raster(roi_sf = roi_sf,
                product_id = "VNP46A4",
-               date = 2012:2023,
+               date = 2012:2024,
                bearer = nasa_bearer,
                output_location_type = "file",
                file_dir = file.path(ntl_bm_dir, "rasters", "annual"))
@@ -377,7 +377,7 @@ for(unit in c("adm0",
   for(time_type in c("annual", "monthly")){
     
     if(time_type == "annual"){
-      time_vec <- 2012:2023
+      time_vec <- 2012:2024
     }
     
     if(time_type == "monthly"){
@@ -690,6 +690,7 @@ r_2020 <- prep_r(2020)
 r_2021 <- prep_r(2021)
 r_2022 <- prep_r(2022)
 r_2023 <- prep_r(2023)
+r_2024 <- prep_r(2024)
 
 ## Make map
 pal <- colorNumeric(c("yellow", "orange", "red"), unique(c(r_2012[],
@@ -703,7 +704,8 @@ pal <- colorNumeric(c("yellow", "orange", "red"), unique(c(r_2012[],
                                                            r_2020[],
                                                            r_2021[],
                                                            r_2022[],
-                                                           r_2023[])),
+                                                           r_2023[],
+                                                           r_2024[])),
                     na.color = "transparent")
 
 leaflet() %>%
@@ -720,8 +722,9 @@ leaflet() %>%
   addRasterImage(r_2021, colors = pal, opacity = 1, group = "2021") %>%
   addRasterImage(r_2022, colors = pal, opacity = 1, group = "2022") %>%
   addRasterImage(r_2023, colors = pal, opacity = 1, group = "2023") %>%
+  addRasterImage(r_2024, colors = pal, opacity = 1, group = "2024") %>%
   addLayersControl(
-    baseGroups = paste0(2012:2023),
+    baseGroups = paste0(2012:2024),
     options = layersControlOptions(collapsed=FALSE)
   )
 ```
@@ -742,7 +745,7 @@ elev_r <- elev_r %>% crop(adm0_sf) %>% mask(adm0_sf)
 
 ## Latest Year
 r <- rast(file.path(ntl_bm_dir, "rasters", "annual",
-                    paste0("VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",2023,".tif")))
+                    paste0("VNP46A4_NearNadir_Composite_Snow_Free_qflag_t",2024,".tif")))
 r <- r %>% crop(adm0_sf) %>% mask(adm0_sf)
 r[] <- log(r[] + 1)
 
@@ -756,11 +759,11 @@ ggplot() +
                       na.value = "transparent") +
   ggnewscale::new_scale_fill() +
   geom_spatraster(data = r,
-                  aes(fill = t2023)) +
+                  aes(fill = t2024)) +
   scale_fill_distiller(palette = "YlGnBl",
                        #midpoint = 2,
                        na.value = "transparent") +
-  labs(title = "Nighttime Lights: 2023") +
+  labs(title = "Nighttime Lights: 2024") +
   coord_sf() +
   theme_void() +
   theme(plot.title = element_text(face = "bold", hjust = 0.5),
@@ -828,7 +831,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated",
                             paste0("ntl_", "citiesbuff", "_", "annual", ".Rds")))
 
 ntl_coord_df <- ntl_df %>%
-  dplyr::filter(date == 2023) %>%
+  dplyr::filter(date == 2024) %>%
   left_join(city_df, by = "geoname_id") %>%
   dplyr::mutate(lat = lat %>% as.numeric(),
                 lon = lon %>% as.numeric()) %>%
@@ -863,7 +866,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated",
 
 ntl_df %>%
   dplyr::filter(population > 0,
-                date == 2023) %>%
+                date == 2024) %>%
   ggplot(aes(x = log(ntl_sum),
              y = log(population))) +
   geom_point(fill = wbg_color_dark) +
@@ -888,7 +891,7 @@ if(!file.exists(OUT_FILE)){
                               "NY.GDP.MKTP.CD"), 
                 country = iso3_code, 
                 start = 2012, 
-                end = 2023)
+                end = 2024)
   
   saveRDS(gdp_df, OUT_FILE)
 } else{
@@ -1049,7 +1052,7 @@ ntl_df %>%
   dplyr::mutate(date = date %>% ymd()) %>%
   dplyr::filter(date >= ymd("2020-01-01")) %>%
   ggplot() +
-  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_vline(xintercept = ymd("2024-04-01"), color = "red") +
   geom_col(aes(x = date, y = ntl_sum),
            fill = wbg_color_light) +
   facet_wrap(~COUNTRY) +
@@ -1065,7 +1068,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated",
                             paste0("ntl_", "adm1", "_", "annual", ".Rds")))
 
 top_adm <- ntl_df %>%
-  filter(date == 2023) %>%
+  filter(date == 2024) %>%
   arrange(-ntl_sum) %>%
   pull(NAME_1) %>%
   head(18)
@@ -1123,7 +1126,7 @@ ntl_df %>%
   dplyr::filter(date >= ymd("2020-01-01")) %>%
   filter(NAME_1 %in% top_adm) %>%
   ggplot() +
-  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_vline(xintercept = ymd("2024-04-01"), color = "red") +
   geom_col(aes(x = date, y = ntl_sum),
            fill = wbg_color_light) +
   facet_wrap(~NAME_1,
@@ -1141,7 +1144,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated",
                             paste0("ntl_", "adm2", "_", "annual", ".Rds")))
 
 top_adm <- ntl_df %>%
-  filter(date == 2023) %>%
+  filter(date == 2024) %>%
   arrange(-ntl_sum) %>%
   pull(NAME_2) %>%
   head(12)
@@ -1199,7 +1202,7 @@ ntl_df %>%
   dplyr::filter(date >= ymd("2020-01-01")) %>%
   #filter(NAME_2 %in% top_adm) %>%
   ggplot() +
-  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_vline(xintercept = ymd("2024-04-01"), color = "red") +
   geom_col(aes(x = date, y = ntl_sum),
            fill = wbg_color_light) +
   facet_wrap(~NAME_2,
@@ -1288,7 +1291,7 @@ ntl_df %>%
   dplyr::filter(date >= ymd("2020-01-01")) %>%
   filter(geoname_id %in% top_adm) %>%
   ggplot() +
-  geom_vline(xintercept = ymd("2023-04-01"), color = "red") +
+  geom_vline(xintercept = ymd("2024-04-01"), color = "red") +
   geom_col(aes(x = date, y = ntl_sum),
            fill = wbg_color_light) +
   facet_wrap(~name, 
@@ -1310,7 +1313,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", "ntl_adm1_annual.Rds"))
 
 ## Prep data
 ntl_wide_df <- ntl_df %>%
-  dplyr::filter(date %in% c(pc_base_year:2023)) %>%
+  dplyr::filter(date %in% c(pc_base_year:2024)) %>%
   dplyr::select(GID_1, date, ntl_sum) %>%
   dplyr::mutate(date = paste0("yr", date)) %>%
   pivot_wider(names_from = date,
@@ -1320,20 +1323,20 @@ ntl_wide_df <- ntl_df %>%
 ntl_wide_df$base_year <- ntl_wide_df[[paste0("yr", pc_base_year)]]
 
 ntl_wide_df <- ntl_wide_df %>%
-  dplyr::mutate(pc20 = (yr2020 - base_year)/base_year * 100,
-                pc21 = (yr2021 - base_year)/base_year * 100,
+  dplyr::mutate(pc21 = (yr2021 - base_year)/base_year * 100,
                 pc22 = (yr2022 - base_year)/base_year * 100,
-                pc23 = (yr2023 - base_year)/base_year * 100)
+                pc23 = (yr2023 - base_year)/base_year * 100,
+                pc24 = (yr2024 - base_year)/base_year * 100)
 
 ## Map
 adm_data_sf <- adm_sf %>%
   left_join(ntl_wide_df, by = "GID_1") %>%
-  pivot_longer(cols = c(pc20, pc21, pc22, pc23)) %>%
+  pivot_longer(cols = c(pc21, pc22, pc23, pc24)) %>%
   dplyr::mutate(name = case_when(
-    name == "pc20" ~ paste0("% Change: ",pc_base_year," to 2020"),
     name == "pc21" ~ paste0("% Change: ",pc_base_year," to 2021"),
     name == "pc22" ~ paste0("% Change: ",pc_base_year," to 2022"),
-    name == "pc23" ~ paste0("% Change: ",pc_base_year," to 2023")
+    name == "pc23" ~ paste0("% Change: ",pc_base_year," to 2023"),
+    name == "pc24" ~ paste0("% Change: ",pc_base_year," to 2024")
   ))
 
 adm_data_sf$value[adm_data_sf$value >= 100] <- 100
@@ -1365,7 +1368,7 @@ ntl_df <- readRDS(file.path(ntl_bm_dir, "aggregated", "ntl_adm2_annual.Rds"))
 
 ## Prep data
 ntl_wide_df <- ntl_df %>%
-  dplyr::filter(date %in% c(pc_base_year:2023)) %>%
+  dplyr::filter(date %in% c(pc_base_year:2024)) %>%
   dplyr::select(GID_2, date, ntl_sum) %>%
   dplyr::mutate(date = paste0("yr", date)) %>%
   pivot_wider(names_from = date,
@@ -1375,20 +1378,20 @@ ntl_wide_df <- ntl_df %>%
 ntl_wide_df$base_year <- ntl_wide_df[[paste0("yr", pc_base_year)]]
 
 ntl_wide_df <- ntl_wide_df %>%
-  dplyr::mutate(pc20 = (yr2020 - base_year)/base_year * 100,
-                pc21 = (yr2021 - base_year)/base_year * 100,
+  dplyr::mutate(pc21 = (yr2021 - base_year)/base_year * 100,
                 pc22 = (yr2022 - base_year)/base_year * 100,
-                pc23 = (yr2023 - base_year)/base_year * 100)
+                pc23 = (yr2023 - base_year)/base_year * 100,
+                pc24 = (yr2024 - base_year)/base_year * 100)
 
 ## Map
 adm_data_sf <- adm_sf %>%
   left_join(ntl_wide_df, by = "GID_2") %>%
-  pivot_longer(cols = c(pc20, pc21, pc22, pc23)) %>%
+  pivot_longer(cols = c(pc21, pc22, pc23, pc24)) %>%
   dplyr::mutate(name = case_when(
-    name == "pc20" ~ paste0("% Change: ",pc_base_year," to 2020"),
     name == "pc21" ~ paste0("% Change: ",pc_base_year," to 2021"),
     name == "pc22" ~ paste0("% Change: ",pc_base_year," to 2022"),
-    name == "pc23" ~ paste0("% Change: ",pc_base_year," to 2023")
+    name == "pc23" ~ paste0("% Change: ",pc_base_year," to 2023"),
+    name == "pc24" ~ paste0("% Change: ",pc_base_year," to 2024")
   ))
 
 adm_data_sf$value[adm_data_sf$value >= 100] <- 100
@@ -1434,7 +1437,7 @@ ntl_wide_df <- ntl_df %>%
                   date_month %in% 1:3 ~ "ntl_before",
                   date_month %in% 5:12 ~ "ntl_after"
                 )) %>%
-  dplyr::filter(year == 2023,
+  dplyr::filter(year == 2024,
                 !is.na(period)) %>%
   group_by(GID_2, period) %>%
   dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
@@ -1468,7 +1471,7 @@ ggplot() +
 
 ### % Change ADM3 Map
 
-Percent change in NTL: Jan - March 2023, vs May - Dec 2023
+Percent change in NTL: Jan - March 2024, vs May - Dec 2024
 
 ```{r}
 
@@ -1485,7 +1488,7 @@ ntl_wide_df <- ntl_df %>%
                   date_month %in% 1:3 ~ "ntl_before",
                   date_month %in% 5:12 ~ "ntl_after"
                 )) %>%
-  dplyr::filter(year == 2023,
+  dplyr::filter(year == 2024,
                 !is.na(period)) %>%
   group_by(GID_3, period) %>%
   dplyr::summarise(ntl_sum = mean(ntl_sum)) %>%
