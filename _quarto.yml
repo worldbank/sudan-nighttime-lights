@@ -1,0 +1,56 @@
+project:
+  type: website
+  title: "Sudan Nighttime Lights Analysis"
+  output-dir: _site
+
+website:
+  title: "Sudan Nighttime Lights"
+  description: "Analysis of nighttime lights data for Sudan using VIIRS Black Marble dataset"
+  repo-url: https://github.com/worldbank/sudan-nighttime-lights
+  repo-actions: [edit, issue]
+  
+  navbar:
+    title: "Sudan Nighttime Lights"
+    left:
+      - href: index.html
+        text: "Home"
+      - href: docs/nighttime_lights.html
+        text: "Analysis"
+      - href: docs/gallery.html
+        text: "Gallery"
+    right:
+      - href: https://github.com/worldbank/sudan-nighttime-lights
+        icon: github
+        aria-label: GitHub
+
+  sidebar:
+    contents:
+      - section: "Documentation"
+        contents:
+          - docs/CODE_OF_CONDUCT.md
+          - docs/CONTRIBUTING.md
+      - section: "Analysis"
+        contents:
+          - docs/nighttime_lights.qmd
+
+format:
+  html:
+    theme: 
+      - cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    code-fold: true
+    code-tools: true
+    code-copy: true
+    fig-width: 8
+    fig-height: 6
+    link-external-newwindow: true
+    
+execute:
+  freeze: auto
+  cache: true
+
+bibliography: docs/bibliography.bib
+csl: https://www.zotero.org/styles/apa

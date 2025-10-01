@@ -1,18 +1,52 @@
-# Projects using the <span style="color:#3EACAD">template</span>
+---
+title: "Gallery"
+---
 
-> A curated list of projects/repositories using the <span style="color:#3EACAD">template</span>.
+# Sudan Nighttime Lights - Key Visualizations
 
-::::{grid}
-:gutter: 2
+This gallery showcases the main visualizations and findings from the Sudan nighttime lights analysis.
 
-:::{grid-item-card} [Syria Economic Monitor](https://datapartnership.github.io/syria-economic-monitor)
-Using Alternative Data to Understand Changing Trends in Trade and Economic Activity in Syria
-:::
+## Interactive Maps
 
-:::{grid-item-card} [Türkiye Earthquake Impact](https://datapartnership.github.io/turkiye-earthquake-impact)
-Using Alternative Data to Understand Economic Impacts of the 2023 Turkey–Syria Earthquake
-:::
-::::
+### Nighttime Lights Distribution
+The interactive map shows the spatial distribution of nighttime lights across Sudan, highlighting urban centers and economic activity patterns.
+
+### Gas Flaring Locations
+Integration of gas flaring data helps separate industrial lighting from urban activity.
+
+## Time Series Analysis
+
+### Monthly Trends
+Analysis of nighttime lights over time reveals seasonal patterns and long-term trends.
+
+### State-Level Comparison
+Comparison of nighttime lights intensity across Sudan's different states.
+
+## Administrative Analysis
+
+### Locality-Level Patterns
+Detailed breakdown of nighttime lights at the locality level for fine-grained analysis.
+
+### Urban vs Rural Distribution
+Contrast between urban centers and rural areas in terms of nighttime lights intensity.
+
+## Data Sources and Methodology
+
+- **VIIRS Black Marble**: Monthly composites from NASA
+- **Administrative Boundaries**: GADM Level 1 and 2 boundaries
+- **Gas Flaring Data**: NOAA detection dataset
+- **Analysis Period**: 2012-2023
+
+## Key Findings
+
+1. **Urban Concentration**: Major cities show highest nighttime lights intensity
+2. **Seasonal Variation**: Clear seasonal patterns in rural areas
+3. **Gas Flaring Impact**: Significant contribution from industrial sources
+4. **Regional Disparities**: Uneven distribution across states
+
+---
+
+*For detailed methodology and complete analysis, see the [main analysis document](nighttime_lights.html).*
 
 ::::{grid}
 :gutter: 2
