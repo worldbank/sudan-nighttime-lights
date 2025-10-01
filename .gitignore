@@ -95,5 +95,14 @@ _build/
 # setuptools-scm/
 src/*/_version.py
 
-# Data folder 
+# Data folder
 /data
+
+/.quarto/
+**/*.quarto_ipynb
+
+# Quarto installation and binaries
+bin/
+quarto-install/
+quarto-macos.tar.gz
+_site/

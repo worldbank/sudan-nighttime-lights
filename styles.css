@@ -1,0 +1,51 @@
+/* Custom styles for Sudan Nighttime Lights project */
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.toc-left {
+  border-right: 1px solid #dee2e6;
+}
+
+/* Code block styling */
+.code-fold-btn {
+  margin-left: 5px;
+}
+
+/* Figure captions */
+.figure-caption {
+  font-style: italic;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+/* Custom colors for Sudan theme */
+:root {
+  --bs-primary: #1f77b4;
+  --bs-secondary: #ff7f0e;
+}
+
+/* Map container styling */
+.leaflet-container {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Table styling */
+.table {
+  font-size: 0.9rem;
+}
+
+/* Alert boxes */
+.alert {
+  border-radius: 6px;
+}
+
+/* Footer */
+.page-footer {
+  border-top: 1px solid #dee2e6;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  color: #6c757d;
+}

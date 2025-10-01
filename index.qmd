@@ -1,0 +1,50 @@
+---
+title: "Sudan Nighttime Lights Analysis"
+---
+
+# Sudan Nighttime Lights Analysis
+
+This project analyzes nighttime lights data for Sudan using NASA's VIIRS Black Marble dataset. The analysis provides insights into economic activity, urbanization patterns, and infrastructure development across Sudan.
+
+## Overview
+
+The analysis includes:
+
+- **Data Collection**: Processing VIIRS Black Marble nighttime lights data
+- **Spatial Analysis**: Examining patterns across Sudan's administrative boundaries
+- **Gas Flaring Integration**: Incorporating gas flaring data to separate industrial activity
+- **Interactive Visualization**: Creating maps and charts to explore the data
+
+## Key Features
+
+- Monthly nighttime lights data from 2012-2023
+- Administrative boundary analysis at state and locality levels
+- Gas flaring data integration
+- Interactive leaflet maps
+- Statistical summaries and trends
+
+## Getting Started
+
+1. View the main [Analysis](docs/nighttime_lights.html) to see the complete workflow
+2. Check the [Gallery](docs/gallery.html) for key visualizations
+3. Review the methodology and data sources in the analysis document
+
+## Data Sources
+
+- **VIIRS Black Marble**: NASA's Visible Infrared Imaging Radiometer Suite
+- **Administrative Boundaries**: GADM (Global Administrative Areas)
+- **Gas Flaring Data**: NOAA's gas flaring detection dataset
+- **Population Data**: World Bank population estimates
+
+## Citation
+
+If you use this analysis or data, please cite:
+
+```
+World Bank. (2025). Sudan Nighttime Lights Analysis. 
+GitHub repository: https://github.com/worldbank/sudan-nighttime-lights
+```
+
+---
+
+*This project is part of the World Bank's economic monitoring and analysis work for Sudan.*
