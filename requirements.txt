@@ -2,7 +2,7 @@
 quarto>=1.4.0
 jupyter>=1.0.0
 matplotlib>=3.7.0
-pandas>=2.0.0
+pandas>=3.0.2
 plotly>=5.15.0
 kaleido>=0.2.1
 
